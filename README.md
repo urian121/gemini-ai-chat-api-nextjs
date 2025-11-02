@@ -1,6 +1,6 @@
 # 🤖 Chatbot con la API de Gemini
 
-Chatbot moderno desarrollado con **Next.js 16** y **React 19** que integra la API de **Google Gemini** para conversaciones inteligentes en tiempo real.
+Chatbot moderno desarrollado con **Next.js 16** y **React 19** que integra la API de **Google Gemini** para conversaciones inteligentes en tiempo real. Este chatbot ofrece una experiencia de usuario fluida y natural, permitiendo a los usuarios interactuar con una inteligencia artificial basada en el modelo Gemini.
 
 ## ✨ Características
 
@@ -13,13 +13,18 @@ Chatbot moderno desarrollado con **Next.js 16** y **React 19** que integra la AP
 - 🔊 **Soporte para audio** en mensajes (en desarrollo)
 - ⚡ **Scroll horizontal** automático en bloques de código largos
 
-## 🚀 Instalación
+#### Para correr el proyecto, solo basta instalar las dependencias y correr el proyecto
 
-```bash
-npm install
-cp .env.local-example .env.local
-# Configura tu GEMINI_API_KEY en .env.local
-npm run dev
-```
+    npm install
+    npm run dev
+    visit http://localhost:3000
+    Configura tu GEMINI_API_KEY en .env.local
 
-Visita [http://localhost:3000](http://localhost:3000) para usar el chatbot.
+### Expresiones de Gratitud 🎁
+
+    Comenta a otros sobre este proyecto 📢
+    Invita una cerveza 🍺 o un café ☕
+    Paypal iamdeveloper86@gmail.com
+    Da las gracias públicamente 🤓.
+
+## No olvides SUSCRIBIRTE 👍
