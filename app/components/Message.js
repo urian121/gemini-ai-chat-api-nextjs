@@ -112,7 +112,7 @@ export default function Message({ message, onRetry }) {
     return parts;
   };
 
-  // Función para parsear el texto y detectar bloques de código
+  // Función para parsear el texto y detectar bloques de código y headers markdown
   const parseMessageContent = (text) => {
     if (!text) return null;
     
@@ -123,11 +123,11 @@ export default function Message({ message, onRetry }) {
     let match;
     
     while ((match = codeBlockRegex.exec(text)) !== null) {
-      // Agregar texto antes del bloque de código (con resaltado)
+      // Agregar texto antes del bloque de código (procesando headers)
       if (match.index > lastIndex) {
         const textBefore = text.slice(lastIndex, match.index);
         if (textBefore.trim()) {
-          parts.push({ type: 'text', content: textBefore });
+          parts.push(...parseTextWithHeaders(textBefore));
         }
       }
       
@@ -139,24 +139,64 @@ export default function Message({ message, onRetry }) {
       lastIndex = match.index + match[0].length;
     }
     
-    // Agregar texto restante (con resaltado)
+    // Agregar texto restante (procesando headers)
     if (lastIndex < text.length) {
       const remainingText = text.slice(lastIndex);
       if (remainingText.trim()) {
-        parts.push({ type: 'text', content: remainingText });
+        parts.push(...parseTextWithHeaders(remainingText));
       }
     }
     
-    // Si no hay bloques de código, devolver solo texto
+    // Si no hay bloques de código, procesar todo el texto
     if (parts.length === 0) {
-      parts.push({ type: 'text', content: text });
+      parts.push(...parseTextWithHeaders(text));
+    }
+    
+    return parts;
+  };
+
+  // Función para parsear headers markdown en texto
+  const parseTextWithHeaders = (text) => {
+    const lines = text.split('\n');
+    const parts = [];
+    let currentTextLines = [];
+    
+    lines.forEach((line) => {
+      const headerMatch = line.match(/^(#{1,6})\s+(.+)$/);
+      
+      if (headerMatch) {
+        // Si hay texto acumulado, agregarlo como párrafo
+        if (currentTextLines.length > 0) {
+          const textContent = currentTextLines.join('\n').trim();
+          if (textContent) {
+            parts.push({ type: 'text', content: textContent });
+          }
+          currentTextLines = [];
+        }
+        
+        // Agregar header
+        const level = headerMatch[1].length;
+        const content = headerMatch[2];
+        parts.push({ type: 'header', level, content });
+      } else {
+        // Acumular líneas de texto normal
+        currentTextLines.push(line);
+      }
+    });
+    
+    // Agregar texto restante si existe
+    if (currentTextLines.length > 0) {
+      const textContent = currentTextLines.join('\n').trim();
+      if (textContent) {
+        parts.push({ type: 'text', content: textContent });
+      }
     }
     
     return parts;
   };
   
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start ml-4'}`}>
       <div className={`flex max-w-2xl ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
         {/* Avatar */}
         <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -168,7 +208,7 @@ export default function Message({ message, onRetry }) {
         </div>
         
         {/* Message bubble */}
-        <div className={`px-4 py-2 rounded-2xl ${
+        <div className={`px-4 py-3 rounded-2xl ${
           isUser 
             ? 'bg-blue-500 text-white rounded-br-md' 
             : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:border-gray-700 rounded-bl-md'
@@ -197,6 +237,30 @@ export default function Message({ message, onRetry }) {
                       code={part.content} 
                       language={part.language} 
                     />
+                  );
+                } else if (part.type === 'header') {
+                  // Renderizar headers markdown
+                  const HeaderTag = `h${Math.min(part.level, 6)}`;
+                  const headerClasses = {
+                    1: 'text-2xl font-bold mb-4 mt-6 first:mt-0',
+                    2: 'text-xl font-bold mb-3 mt-5 first:mt-0',
+                    3: 'text-lg font-bold mb-2 mt-4 first:mt-0',
+                    4: 'text-base font-bold mb-2 mt-3 first:mt-0',
+                    5: 'text-sm font-bold mb-1 mt-2 first:mt-0',
+                    6: 'text-xs font-bold mb-1 mt-2 first:mt-0'
+                  };
+                  
+                  return (
+                    <HeaderTag 
+                      key={index} 
+                      className={`${headerClasses[part.level]} ${
+                        isUser 
+                          ? 'text-blue-100' 
+                          : 'text-gray-900 dark:text-gray-100'
+                      }`}
+                    >
+                      {part.content}
+                    </HeaderTag>
                   );
                 } else {
                   // Parsear el texto para resaltar palabras con comillas

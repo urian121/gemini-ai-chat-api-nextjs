@@ -18,7 +18,7 @@ export default function CodeBlock({ code, language = 'javascript' }) {
   };
 
   return (
-    <div className="relative my-3">
+    <div className="relative my-4 -mx-2">
       {/* Header del bloque de código */}
       <div className="flex items-center justify-between bg-gray-800 text-gray-300 px-4 py-2 rounded-t-lg text-sm">
         <span className="font-medium">{language}</span>
@@ -54,8 +54,12 @@ export default function CodeBlock({ code, language = 'javascript' }) {
           borderTopRightRadius: 0,
           borderBottomLeftRadius: '0.5rem',
           borderBottomRightRadius: '0.5rem',
+          overflowX: 'auto',
+          maxWidth: '100%',
         }}
         showLineNumbers={true}
+        wrapLines={false}
+        wrapLongLines={false}
       >
         {code}
       </SyntaxHighlighter>
