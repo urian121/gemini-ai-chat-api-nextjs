@@ -24,7 +24,7 @@ export default function MessageInput({ onSendMessage }) {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
@@ -207,7 +207,7 @@ export default function MessageInput({ onSendMessage }) {
 
   return (
     <div 
-      className="fixed bottom-0 w-full border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4"
+      className="fixed bottom-0 w-full bg-gray-50 px-4 py-4"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
@@ -215,12 +215,12 @@ export default function MessageInput({ onSendMessage }) {
       <div className="max-w-3xl mx-auto relative">
         {/* Indicador de drag & drop */}
         {isDragOver && (
-          <div className="absolute inset-0 bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-gray-800/10 border-2 border-dashed border-gray-800 rounded-lg flex items-center justify-center z-10">
             <div className="text-center">
-              <svg className="w-12 h-12 text-blue-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-gray-800 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              <p className="text-blue-500 font-medium">Suelta el archivo aquí</p>
+              <p className="text-gray-800 font-medium">Suelta el archivo aquí</p>
             </div>
           </div>
         )}
@@ -233,21 +233,21 @@ export default function MessageInput({ onSendMessage }) {
               <Image 
                 src={imagePreview} 
                 alt="Preview" 
-                className="max-w-xs max-h-32 rounded-lg dark:border-gray-600"
+                className="max-w-xs max-h-32 rounded-lg"
                 width={200}
                 height={200}
               />
             ) : (
               // Preview de archivo no-imagen
-              <div className="flex items-center space-x-3 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg max-w-xs">
+              <div className="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg max-w-xs">
                 <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  <p className="text-sm font-medium text-gray-900 truncate">
                     {selectedImage.name}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-gray-500">
                     {(selectedImage.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
@@ -268,9 +268,9 @@ export default function MessageInput({ onSendMessage }) {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder={selectedImage ? "Describe qué quieres saber sobre la imagen..." : "Escribe tu mensaje..."}
-              className="w-full px-4 py-3 pr-12 dark:border-gray-600 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
               rows="1"
               style={{ minHeight: '48px', maxHeight: '120px' }}
             />
@@ -285,7 +285,7 @@ export default function MessageInput({ onSendMessage }) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center transition-colors duration-200 hover:cursor-pointer"
+            className="shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition-colors duration-200 hover:cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
@@ -302,7 +302,7 @@ export default function MessageInput({ onSendMessage }) {
                 ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
                 : isProcessingAudio
                 ? 'bg-yellow-500 text-white cursor-not-allowed'
-                : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
             }`}
             title={
               isRecording 
@@ -330,7 +330,7 @@ export default function MessageInput({ onSendMessage }) {
           <button
             type="submit"
             disabled={!message.trim() && !selectedImage}
-            className="shrink-0 w-12 h-12 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center transition-colors duration-200"
+            className="shrink-0 w-12 h-12 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center transition-colors duration-200"
           >
             <svg 
               className="w-5 h-5" 
@@ -356,7 +356,7 @@ export default function MessageInput({ onSendMessage }) {
           className="hidden"
         />
         
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+        <p className="text-xs text-gray-500 mt-2 text-center">
           Presiona Enter para enviar, Shift+Enter para nueva línea • Arrastra archivos para adjuntarlos • Usa el micrófono para dictar
         </p>
       </div>

@@ -201,8 +201,8 @@ export default function Message({ message, onRetry }) {
         {/* Avatar */}
         <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
           isUser 
-            ? 'bg-blue-500 text-white' 
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+            ? 'bg-gray-800 text-white' 
+            : 'bg-gray-200 text-gray-600'
         }`}>
           {isUser ? 'U' : 'AI'}
         </div>
@@ -210,8 +210,8 @@ export default function Message({ message, onRetry }) {
         {/* Message bubble */}
         <div className={`px-4 py-3 rounded-2xl ${
           isUser 
-            ? 'bg-blue-500 text-white rounded-br-md' 
-            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:border-gray-700 rounded-bl-md'
+            ? 'bg-gray-800 text-white rounded-br-md' 
+            : 'bg-white text-gray-900 rounded-bl-md'
         }`}>
           {/* Imagen si existe */}
           {message.image && (
@@ -219,7 +219,7 @@ export default function Message({ message, onRetry }) {
               <Image 
                 src={message.image} 
                 alt="Imagen adjunta" 
-                className="max-w-full h-auto rounded-lg dark:border-gray-600"
+                className="max-w-full h-auto rounded-lg"
                 width={300}
                 height={200}
               />
@@ -255,8 +255,8 @@ export default function Message({ message, onRetry }) {
                       key={index} 
                       className={`${headerClasses[part.level]} ${
                         isUser 
-                          ? 'text-blue-100' 
-                          : 'text-gray-900 dark:text-gray-100'
+                          ? 'text-gray-300' 
+                          : 'text-gray-900'
                       }`}
                     >
                       {part.content}
@@ -282,8 +282,8 @@ export default function Message({ message, onRetry }) {
                                 key={textIndex}
                                 className={`${
                                   textPart.isCode 
-                                    ? 'bg-gray-100 dark:bg-gray-800 text-red-600 dark:text-red-400 px-1 py-0.5 rounded font-mono text-xs'
-                                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-1 py-0.5 rounded font-medium'
+                                    ? 'bg-gray-100 text-red-600 px-1 py-0.5 rounded font-mono text-xs'
+                                    : 'bg-yellow-100 text-yellow-800 px-1 py-0.5 rounded font-medium'
                                 }`}
                               >
                                 {textPart.content}
@@ -308,8 +308,8 @@ export default function Message({ message, onRetry }) {
           <div className="flex items-center justify-between mt-4">
             <p className={`text-xs ${
               isUser 
-                ? 'text-blue-100' 
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'text-gray-300' 
+                : 'text-gray-500'
             }`}>
               {new Intl.DateTimeFormat('es-ES', { 
                 hour: '2-digit', 
@@ -326,10 +326,10 @@ export default function Message({ message, onRetry }) {
                   onClick={handleCopy}
                   className={`flex items-center space-x-1 text-xs transition-colors hover:cursor-pointer ${
                     copied 
-                      ? 'text-green-500 dark:text-green-400' 
+                      ? 'text-green-500' 
                       : isUser 
-                        ? 'text-blue-300 hover:text-blue-200' 
-                        : 'text-gray-500 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300'
+                        ? 'text-gray-300 hover:text-gray-400' 
+                        : 'text-gray-500 hover:text-gray-800'
                   }`}
                   title={copied ? 'Copiado!' : 'Copiar mensaje'}
                 >
@@ -357,8 +357,8 @@ export default function Message({ message, onRetry }) {
                   onClick={handleReadAloud}
                   className={`flex items-center space-x-1 text-xs transition-colors hover:cursor-pointer ${
                     isReading 
-                      ? 'text-blue-500 dark:text-blue-400' 
-                      : 'text-gray-500 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300'
+                      ? 'text-gray-800' 
+                      : 'text-gray-500 hover:text-gray-800'
                   }`}
                   title={isReading ? 'Detener lectura' : 'Leer en voz alta'}
                 >
@@ -387,7 +387,7 @@ export default function Message({ message, onRetry }) {
           {message.failed && !isUser && onRetry && (
             <button
               onClick={() => onRetry(message.id)}
-              className="flex items-center space-x-1 mt-2 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors hover:cursor-pointer"
+              className="flex items-center space-x-1 mt-2 text-xs text-red-500 hover:text-red-700 transition-colors hover:cursor-pointer"
               title="Reintentar pregunta"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
