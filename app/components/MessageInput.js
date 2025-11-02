@@ -11,7 +11,8 @@ export default function MessageInput({ onSendMessage }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const fileInputRef = useRef(null);
-  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -117,112 +118,82 @@ export default function MessageInput({ onSendMessage }) {
     }
   };
 
-  // Funciones para grabación de audio
-  const startRecording = () => {
-    // Debug: Verificar qué está disponible
-    console.log('Verificando compatibilidad de reconocimiento de voz:');
-    console.log('window.SpeechRecognition:', 'SpeechRecognition' in window);
-    console.log('window.webkitSpeechRecognition:', 'webkitSpeechRecognition' in window);
-    console.log('Navigator userAgent:', navigator.userAgent);
-    
-    // Verificación mejorada
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      alert('Tu navegador no soporta reconocimiento de voz. Prueba con Chrome o Edge.');
-      return;
-    }
-
+  // Funciones para grabación de audio con MediaRecorder
+  const startRecording = async () => {
     try {
-      recognitionRef.current = new SpeechRecognition();
-    } catch (error) {
-      console.error('Error al crear SpeechRecognition:', error);
-      alert('Error al inicializar el reconocimiento de voz. Verifica los permisos del navegador.');
-      return;
-    }
-    
-    // Configuración más robusta
-    recognitionRef.current.continuous = false;
-    recognitionRef.current.interimResults = false;
-    recognitionRef.current.lang = 'es-ES';
-    recognitionRef.current.maxAlternatives = 1;
-    
-    // Variable para el timeout
-    let timeoutId;
-    
-    recognitionRef.current.onstart = () => {
-      setIsRecording(true);
-      setIsProcessingAudio(false);
+      // Solicitar permisos de micrófono
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Timeout para evitar colgarse
-      timeoutId = setTimeout(() => {
-        if (recognitionRef.current) {
-          recognitionRef.current.stop();
-          setIsRecording(false);
-          setIsProcessingAudio(false);
-          alert('Tiempo de grabación agotado. Intenta de nuevo.');
+      // Crear MediaRecorder
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      // Configurar eventos
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
         }
-      }, 30000); // 30 segundos máximo
-    };
-
-    recognitionRef.current.onresult = (event) => {
-      clearTimeout(timeoutId);
-      const transcript = event.results[0][0].transcript;
-      setMessage(prev => prev + (prev ? ' ' : '') + transcript);
-      setIsProcessingAudio(false);
-    };
-
-    recognitionRef.current.onerror = (event) => {
-      clearTimeout(timeoutId);
-      console.error('Error en reconocimiento de voz:', event.error);
-      setIsRecording(false);
-      setIsProcessingAudio(false);
+      };
       
-      switch (event.error) {
-        case 'not-allowed':
-          alert('Necesitas dar permisos de micrófono para usar esta función.');
-          break;
-        case 'no-speech':
-          alert('No se detectó ningún audio. Intenta hablar más cerca del micrófono.');
-          break;
-        case 'network':
-          alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
-          break;
-        case 'service-not-allowed':
-          alert('El servicio de reconocimiento de voz no está disponible.');
-          break;
-        case 'bad-grammar':
-          alert('Error en la configuración del reconocimiento de voz.');
-          break;
-        case 'language-not-supported':
-          alert('El idioma no es compatible con el reconocimiento de voz.');
-          break;
-        default:
-          alert(`Error en el reconocimiento de voz (${event.error}). Intenta de nuevo.`);
-      }
-    };
-
-    recognitionRef.current.onend = () => {
-      clearTimeout(timeoutId);
-      setIsRecording(false);
-      setIsProcessingAudio(false);
-    };
-
-    try {
-      setIsProcessingAudio(true);
-      recognitionRef.current.start();
+      mediaRecorder.onstop = async () => {
+        setIsProcessingAudio(true);
+        
+        // Crear blob de audio
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        try {
+          // Enviar audio al servidor para procesamiento
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'voice.webm');
+          
+          const response = await fetch('/api/voice', {
+            method: 'POST',
+            body: formData,
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            if (result.transcript) {
+              setMessage(prev => prev + (prev ? ' ' : '') + result.transcript);
+            } else {
+              alert('No se pudo procesar el audio. Intenta de nuevo.');
+            }
+          } else {
+            alert('Error al procesar el audio. Intenta de nuevo.');
+          }
+        } catch (error) {
+          console.error('Error al procesar audio:', error);
+          alert('Error al procesar el audio. Intenta de nuevo.');
+        } finally {
+          setIsProcessingAudio(false);
+          // Detener el stream
+          stream.getTracks().forEach(track => track.stop());
+        }
+      };
+      
+      // Iniciar grabación
+      mediaRecorder.start();
+      setIsRecording(true);
+      
     } catch (error) {
-      console.error('Error al iniciar reconocimiento:', error);
+      console.error('Error al iniciar grabación:', error);
+      if (error.name === 'NotAllowedError') {
+        alert('Necesitas dar permisos de micrófono para usar esta función.');
+      } else if (error.name === 'NotFoundError') {
+        alert('No se encontró micrófono. Verifica que esté conectado.');
+      } else {
+        alert('Error al acceder al micrófono. Intenta de nuevo.');
+      }
       setIsRecording(false);
       setIsProcessingAudio(false);
-      alert('Error al iniciar el reconocimiento de voz. Intenta de nuevo.');
     }
   };
 
   const stopRecording = () => {
-    if (recognitionRef.current) {
-      setIsProcessingAudio(true);
-      recognitionRef.current.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
   };
 
