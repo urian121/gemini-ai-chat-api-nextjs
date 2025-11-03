@@ -23,7 +23,7 @@ export default function Sidebar({ isOpen, onToggle, onSelectConversation, onNewC
   const isLoading = isOpen && items === null;
 
   return (
-    <aside className={`fixed right-0 top-0 h-screen z-40 ${isOpen ? 'w-64' : 'w-10'} transition-all duration-200 bg-gray-50 flex flex-col`}>
+    <aside className={`fixed left-0 top-0 h-screen z-40 ${isOpen ? 'w-64' : 'w-10'} transition-all duration-200 bg-gray-50 flex flex-col`}>
       <div className="flex flex-col items-center gap-3 py-3">
         {/* Botón Nuevo chat */}
         <button

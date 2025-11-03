@@ -182,7 +182,7 @@ export default function Chat() {
     <div className="flex h-screen">
       {/* contenido principal */}
       <div className="flex-1 flex flex-col w-full">
-        <div className="flex-1 flex flex-col w-full max-w-full px-2 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex-1 flex flex-col w-full max-w-full">
           <MessageList 
             messages={messages} 
             isTyping={isTyping}
