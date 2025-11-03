@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { ensureTables, cleanupExpired, createConversation, saveMessage } from '../../db/index.js';
 
 export async function POST(request) {
   try {
-    const { message, image, history = [] } = await request.json();
+    const { message, image, history = [], conversationId: incomingConversationId } = await request.json();
 
     if (!message && !image)
       return NextResponse.json({ error: 'Mensaje o imagen requerido' }, { status: 400 });
@@ -49,6 +50,24 @@ export async function POST(request) {
       parts.push({ inline_data: { mime_type: mimeType, data: base64Data } });
     }
 
+    // --- Persistencia mínima y limpieza ---
+    ensureTables();
+    cleanupExpired();
+
+    let conversationId = incomingConversationId;
+    if (!conversationId) {
+      conversationId = crypto.randomUUID();
+      createConversation(conversationId);
+    }
+
+    // Guardar mensaje del usuario
+    if (message) {
+      saveMessage({ conversationId, content: message, sender: 'user', image: null });
+    }
+    if (image) {
+      saveMessage({ conversationId, content: '[imagen]', sender: 'user', image });
+    }
+
     // --- Configuración y llamada ---
     const apiUrl = process.env.GEMINI_API_URL || 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
     const response = await fetch(
@@ -86,9 +105,14 @@ export async function POST(request) {
     const data = await response.json();
     const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
+    const finalText = responseText || 'No se obtuvo respuesta del modelo';
+    // Guardar respuesta del bot
+    saveMessage({ conversationId, content: finalText, sender: 'bot', image: null });
+
     return NextResponse.json({
-      message: responseText || 'No se obtuvo respuesta del modelo',
-      success: !!responseText
+      message: finalText,
+      success: !!responseText,
+      conversationId
     });
 
   } catch (error) {

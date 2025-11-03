@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import Sidebar from './Sidebar';
 
 export default function Chat() {
+  const [conversationId, setConversationId] = useState(null);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -15,6 +17,7 @@ export default function Chat() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -43,6 +46,14 @@ export default function Chat() {
     setIsTyping(true);
 
     try {
+      // Asegurar conversación
+      let cid = conversationId;
+      if (!cid) {
+        const newRes = await fetch('/api/chat/new', { method: 'POST' });
+        const newData = await newRes.json();
+        cid = newData.conversationId;
+        setConversationId(cid);
+      }
       // Llamar a la API de Gemini
       const response = await fetch('/api/gemini', {
         method: 'POST',
@@ -52,7 +63,8 @@ export default function Chat() {
         body: JSON.stringify({
           message: text.trim(),
           image: imageBase64, // Enviar solo el base64 al API
-          history: messages // Enviar historial para contexto
+          history: messages, // Enviar historial para contexto
+          conversationId: cid
         }),
       });
 
@@ -68,7 +80,16 @@ export default function Chat() {
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
+      // Parse robusto: si no es JSON, tratar como error
+      const ct = response.headers.get('content-type') || '';
+      let data;
+      if (ct.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const textBody = await response.text();
+        throw new Error(`Respuesta no-JSON del servidor: ${textBody.slice(0, 120)}...`);
+      }
+      if (data?.conversationId && !conversationId) setConversationId(data.conversationId);
 
       // Verificar si la respuesta es válida
       const isFailedResponse = data.message === 'No se obtuvo respuesta del modelo' || !data.success;
@@ -89,12 +110,15 @@ export default function Chat() {
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       
-      // Mostrar mensaje de error al usuario
+      // Mostrar mensaje de error al usuario y permitir reintento
       const errorMessage = {
         id: Date.now() + 1,
         text: `Lo siento, hubo un error: ${error.message}. Por favor, intenta de nuevo.`,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        failed: true,
+        originalMessage: text?.trim() || '',
+        originalImage: imageBase64 || null
       };
 
       setMessages(prev => [...prev, errorMessage]);
@@ -115,17 +139,66 @@ export default function Chat() {
     await handleSendMessage(failedMessage.originalMessage, failedMessage.originalImage);
   };
 
+  const loadConversation = async (cid) => {
+    try {
+      const res = await fetch(`/api/chat/${cid}/messages`);
+      const data = await res.json();
+      setConversationId(cid);
+      const mapped = (data.messages || []).map(m => ({
+        id: m.id,
+        text: m.content,
+        image: m.image || null,
+        sender: m.sender,
+        timestamp: new Date(m.created_at)
+      }));
+      setMessages(mapped.length ? mapped : [{
+        id: Date.now(),
+        text: 'Conversación vacía. Escribe tu mensaje.',
+        sender: 'bot',
+        timestamp: new Date()
+      }]);
+    } catch (e) {
+      console.error('No se pudo cargar la conversación', e);
+    }
+  };
+
+  const handleNewChat = async () => {
+    try {
+      const res = await fetch('/api/chat/new', { method: 'POST' });
+      const data = await res.json();
+      setConversationId(data.conversationId);
+    } catch {}
+    setMessages([
+      {
+        id: Date.now(),
+        text: 'Nuevo chat iniciado. ¿En qué puedo ayudarte?',
+        sender: 'bot',
+        timestamp: new Date()
+      }
+    ]);
+  };
+
   return (
-    <div className="flex flex-col h-screen">      
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        <MessageList 
-          messages={messages} 
-          isTyping={isTyping}
-          messagesEndRef={messagesEndRef}
-          onRetry={handleRetry}
-        />
+    <div className="flex h-screen">
+      {/* contenido principal */}
+      <div className="flex-1 flex flex-col w-full">
+        <div className="flex-1 flex flex-col w-full max-w-full px-2 sm:px-4 md:px-6 lg:px-8">
+          <MessageList 
+            messages={messages} 
+            isTyping={isTyping}
+            messagesEndRef={messagesEndRef}
+            onRetry={handleRetry}
+          />
+        </div>
+        <MessageInput onSendMessage={handleSendMessage} />
       </div>
-      <MessageInput onSendMessage={handleSendMessage} />
+      {/* sidebar derecho */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(o => !o)}
+        onSelectConversation={loadConversation}
+        onNewChat={handleNewChat}
+      />
     </div>
   );
 }

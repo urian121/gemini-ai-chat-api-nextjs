@@ -2,15 +2,16 @@ import CodeBlock from './CodeBlock';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { useState } from 'react';
 import Image from 'next/image';
+import { Check, Copy, StopCircle, Volume2, RefreshCw } from 'lucide-react';
 
-export default function Message({ message, onRetry }) {
+export default function Message({ message, onRetry, animate = false }) {
   const isUser = message.sender === 'user';
   const [copied, setCopied] = useState(false);
   const [isReading, setIsReading] = useState(false);
   
   // Usar efecto typewriter solo para mensajes del bot
   const { displayedText, isTyping } = useTypewriter(
-    !isUser ? message.text : null, 
+    !isUser ? (animate ? message.text : null) : null,
     25, // velocidad de escritura
     100 // delay inicial
   );
@@ -60,7 +61,7 @@ export default function Message({ message, onRetry }) {
   };
   
   // Texto a mostrar: typewriter para bot, texto completo para usuario
-  const textToShow = isUser ? message.text : displayedText;
+  const textToShow = isUser ? message.text : (animate ? displayedText : message.text);
   
   // Función para parsear texto y resaltar palabras con comillas y negrita
   const parseTextWithHighlights = (text) => {
@@ -196,8 +197,16 @@ export default function Message({ message, onRetry }) {
   };
   
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start ml-4'}`}>
-      <div className={`flex ${isUser ? 'max-w-lg' : 'max-w-2xl'} ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+    <div className={`flex ${isUser ? 'justify-end mr-10' : 'justify-start ml-4'}`}>
+      <div className={`
+        flex w-full ${isUser 
+          ? 'max-w-[80%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-md' 
+          : 'max-w-[85%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-md'} ${isUser 
+          ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser 
+          ? 'space-x-reverse space-x-2' 
+          : 'space-x-2 sm:space-x-3'}`
+        }>
+
         {/* Avatar */}
         <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
           isUser 
@@ -208,7 +217,7 @@ export default function Message({ message, onRetry }) {
         </div>
         
         {/* Message bubble */}
-        <div className={`px-4 py-3 rounded-2xl ${
+        <div className={`flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl ${
           isUser 
             ? 'bg-gray-800 text-white rounded-br-md' 
             : 'bg-white text-gray-900 rounded-bl-md'
@@ -335,16 +344,12 @@ export default function Message({ message, onRetry }) {
                 >
                   {copied ? (
                     <>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <Check className="w-3 h-3" />
                       <span>Copiado</span>
                     </>
                   ) : (
                     <>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
+                      <Copy className="w-3 h-3" />
                       <span>Copiar</span>
                     </>
                   )}
@@ -364,17 +369,12 @@ export default function Message({ message, onRetry }) {
                 >
                   {isReading ? (
                     <>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v4H9z" />
-                      </svg>
+                      <StopCircle className="w-3 h-3" />
                       <span>Detener</span>
                     </>
                   ) : (
                     <>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                      </svg>
+                      <Volume2 className="w-3 h-3" />
                       <span>Leer</span>
                     </>
                   )}
@@ -390,9 +390,7 @@ export default function Message({ message, onRetry }) {
               className="flex items-center space-x-1 mt-2 text-xs text-red-500 hover:text-red-700 transition-colors hover:cursor-pointer"
               title="Reintentar pregunta"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              <RefreshCw className="w-4 h-4" />
               <span>Reintentar</span>
             </button>
           )}

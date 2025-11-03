@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Image from 'next/image';
+import { UploadCloud, FileText, Paperclip, Loader2, Square, Mic, Send } from 'lucide-react';
 
 export default function MessageInput({ onSendMessage }) {
   const [message, setMessage] = useState('');
@@ -207,19 +208,17 @@ export default function MessageInput({ onSendMessage }) {
 
   return (
     <div 
-      className="fixed bottom-0 w-full bg-gray-50 px-4 py-4"
+      className="fixed bottom-0 w-full bg-gray-50 px-2 sm:px-4 md:px-6 py-4"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="max-w-3xl mx-auto relative">
+      <div className="w-full max-w-[95%] sm:max-w-full mx-auto relative">
         {/* Indicador de drag & drop */}
         {isDragOver && (
           <div className="absolute inset-0 bg-gray-800/10 border-2 border-dashed border-gray-800 rounded-lg flex items-center justify-center z-10">
             <div className="text-center">
-              <svg className="w-12 h-12 text-gray-800 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
+              <UploadCloud className="w-12 h-12 text-gray-800 mx-auto mb-2" />
               <p className="text-gray-800 font-medium">Suelta el archivo aquí</p>
             </div>
           </div>
@@ -240,9 +239,7 @@ export default function MessageInput({ onSendMessage }) {
             ) : (
               // Preview de archivo no-imagen
               <div className="flex items-center space-x-3 bg-gray-100 p-3 rounded-lg max-w-xs">
-                <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <FileText className="w-8 h-8 text-gray-500" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {selectedImage.name}
@@ -263,89 +260,70 @@ export default function MessageInput({ onSendMessage }) {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="flex items-end space-x-3">
-          <div className="flex-1 relative">
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-end space-y-3 sm:space-y-0 sm:space-x-3">
+          <div className="w-full sm:flex-1 relative">
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={selectedImage ? "Describe qué quieres saber sobre la imagen..." : "Escribe tu mensaje..."}
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500"
+              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 text-sm leading-tight min-h-[40px] max-h-[100px] sm:min-h-[44px] sm:max-h-[120px] md:px-4 md:py-3 md:rounded-2xl md:text-base md:min-h-[48px] md:max-h-[140px]"
               rows="1"
-              style={{ minHeight: '48px', maxHeight: '120px' }}
             />
-            
             {/* Contador de caracteres */}
-            <div className="absolute bottom-2 right-3 text-xs text-gray-400">
+            <div className="absolute bottom-2 right-2 text-xs text-gray-400 sm:right-3">
               {message.length}/1000
             </div>
           </div>
           
-          {/* Botón de adjuntar imagen */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="shrink-0 w-12 h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition-colors duration-200 hover:cursor-pointer"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-            </svg>
-          </button>
-
-          {/* Botón de grabación de audio */}
-          <button
-            type="button"
-            onClick={toggleRecording}
-            disabled={isProcessingAudio}
-            className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 hover:cursor-pointer ${
-              isRecording 
-                ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                : isProcessingAudio
-                ? 'bg-yellow-500 text-white cursor-not-allowed'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-            }`}
-            title={
-              isRecording 
-                ? 'Detener grabación' 
-                : isProcessingAudio 
-                ? 'Procesando audio...' 
-                : 'Grabar mensaje de voz'
-            }
-          >
-            {isProcessingAudio ? (
-              <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            ) : isRecording ? (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 6h12v12H6z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            )}
-          </button>
-          
-          <button
-            type="submit"
-            disabled={!message.trim() && !selectedImage}
-            className="shrink-0 w-12 h-12 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center transition-colors duration-200"
-          >
-            <svg 
-              className="w-5 h-5" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
+          {/* Contenedor de botones */}
+          <div className="flex items-center justify-center space-x-2 sm:space-x-3">
+            {/* Botón de adjuntar imagen */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition-colors duration-200 hover:cursor-pointer"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
-              />
-            </svg>
-          </button>
+              <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Botón de grabación de audio */}
+            <button
+              type="button"
+              onClick={toggleRecording}
+              disabled={isProcessingAudio}
+              className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 hover:cursor-pointer ${
+                isRecording 
+                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                  : isProcessingAudio
+                  ? 'bg-yellow-500 text-white cursor-not-allowed'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              }`}
+              title={
+                isRecording 
+                  ? 'Detener grabación' 
+                  : isProcessingAudio 
+                  ? 'Procesando audio...' 
+                  : 'Grabar mensaje de voz'
+              }
+            >
+              {isProcessingAudio ? (
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+              ) : isRecording ? (
+                <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+              ) : (
+                <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+              )}
+            </button>
+            
+            <button
+              type="submit"
+              disabled={!message.trim() && !selectedImage}
+              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-full flex items-center justify-center transition-colors duration-200"
+            >
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
         </form>
         
         {/* Input oculto para archivos */}
