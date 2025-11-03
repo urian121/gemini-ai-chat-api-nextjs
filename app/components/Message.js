@@ -197,7 +197,7 @@ export default function Message({ message, onRetry }) {
   
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start ml-4'}`}>
-      <div className={`flex max-w-2xl ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+      <div className={`flex ${isUser ? 'max-w-lg' : 'max-w-2xl'} ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
         {/* Avatar */}
         <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
           isUser 

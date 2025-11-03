@@ -1,7 +1,7 @@
 export default function TypingIndicator() {
   return (
-    <div className="flex justify-start">
-      <div className="flex max-w-xs lg:max-w-md items-end space-x-2">
+    <div className="flex justify-start ml-4">
+      <div className="flex max-w-2xl items-end space-x-3">
         {/* Avatar */}
         <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-gray-200 text-gray-600">
           AI
