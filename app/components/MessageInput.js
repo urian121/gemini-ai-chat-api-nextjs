@@ -207,13 +207,13 @@ export default function MessageInput({ onSendMessage }) {
   };
 
   return (
-    <div 
-      className="fixed bottom-0 w-full bg-gray-50 px-2 sm:px-4 md:px-6 py-4"
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <div className="w-full max-w-[95%] sm:max-w-full mx-auto relative">
+  <div 
+    className="fixed bottom-0 w-full bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5"
+    onDragOver={handleDragOver}
+    onDragLeave={handleDragLeave}
+    onDrop={handleDrop}
+  >
+    <div className="w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl mx-auto relative">
         {/* Indicador de drag & drop */}
         {isDragOver && (
           <div className="absolute inset-0 bg-gray-800/10 border-2 border-dashed border-gray-800 rounded-lg flex items-center justify-center z-10">
@@ -260,7 +260,7 @@ export default function MessageInput({ onSendMessage }) {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-end space-y-3 sm:space-y-0 sm:space-x-3">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-end space-y-3 sm:space-y-0 sm:space-x-3">
           <div className="w-full sm:flex-1 relative">
             <textarea
               value={message}
