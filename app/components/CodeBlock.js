@@ -24,7 +24,7 @@ export default function CodeBlock({ code, language = 'javascript' }) {
         <span className="font-medium truncate">{language}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center space-x-1 hover:text-white transition-colors shrink-0 ml-2"
+          className="flex items-center space-x-1 hover:text-white transition-colors shrink-0 ml-2 hover:cursor-pointer"
         >
           {copied ? (
             <>
