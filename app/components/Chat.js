@@ -49,7 +49,15 @@ export default function Chat() {
       // Asegurar conversación
       let cid = conversationId;
       if (!cid) {
-        const newRes = await fetch('/api/chat/new', { method: 'POST' });
+        let newRes = await fetch('/api/chat/new', { method: 'POST' });
+        if (!newRes.ok) {
+          // Fallback en deploy si el método POST no está permitido
+          newRes = await fetch('/api/chat/new');
+        }
+        if (!newRes.ok) {
+          const textBody = await newRes.text();
+          throw new Error(`No se pudo crear conversación: HTTP ${newRes.status} ${textBody.slice(0, 120)}...`);
+        }
         const newData = await newRes.json();
         cid = newData.conversationId;
         setConversationId(cid);
