@@ -215,8 +215,8 @@ export default function Message({ message, onRetry, animate = false }) {
     <div className={`flex ${isUser ? 'justify-end mr-10' : 'justify-start ml-4'}`}>
       <div className={`
         flex w-full ${isUser 
-          ? 'max-w-[80%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-md' 
-          : 'max-w-[85%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-md'} ${isUser 
+          ? 'max-w-[80%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl' 
+          : 'max-w-[85%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl'} ${isUser 
           ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser 
           ? 'space-x-reverse space-x-2' 
           : 'space-x-2 sm:space-x-3'}`

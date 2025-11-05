@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { ensureTables, cleanupExpired, createConversation, saveMessage } from '../../db/index.js';
+import { ensureTables, cleanupExpired, createConversation, saveMessage } from '@/app/db/index.js';
+import { randomUUID } from 'node:crypto';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
@@ -72,21 +76,26 @@ export async function POST(request) {
     }
 
     // --- Persistencia mínima y limpieza ---
-    ensureTables();
-    cleanupExpired();
+    try {
+      ensureTables();
+      cleanupExpired();
+    } catch (e) {
+      // En serverless sin SQLite funcional, continuar sin persistencia
+      console.warn('Persistencia deshabilitada:', e?.message || e);
+    }
 
     let conversationId = incomingConversationId;
     if (!conversationId) {
-      conversationId = crypto.randomUUID();
-      createConversation(conversationId);
+      conversationId = randomUUID();
+      try { createConversation(conversationId); } catch {}
     }
 
     // Guardar mensaje del usuario
     if (message) {
-      saveMessage({ conversationId, content: message, sender: 'user', image: null });
+      try { saveMessage({ conversationId, content: message, sender: 'user', image: null }); } catch {}
     }
     if (image) {
-      saveMessage({ conversationId, content: '[imagen]', sender: 'user', image });
+      try { saveMessage({ conversationId, content: '[imagen]', sender: 'user', image }); } catch {}
     }
 
     // --- Configuración y llamada ---
@@ -127,8 +136,8 @@ export async function POST(request) {
     const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
     const finalText = responseText || 'No se obtuvo respuesta del modelo';
-    // Guardar respuesta del bot
-    saveMessage({ conversationId, content: finalText, sender: 'bot', image: null });
+    // Guardar respuesta del bot (best effort)
+    try { saveMessage({ conversationId, content: finalText, sender: 'bot', image: null }); } catch {}
 
     return NextResponse.json({
       message: finalText,

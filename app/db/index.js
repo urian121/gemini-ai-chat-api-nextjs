@@ -1,8 +1,11 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 
+// En Vercel (serverless), usa /tmp para escritura. En local, usa db.sqlite.
+const DB_PATH = process.env.DB_PATH || (process.env.VERCEL ? '/tmp/db.sqlite' : 'db.sqlite');
+
 // Conexión única a SQLite
-const sqlite = new Database('db.sqlite');
+const sqlite = new Database(DB_PATH);
 // Usar un único archivo de base de datos (sin -wal/-shm)
 sqlite.pragma('journal_mode = DELETE');
 sqlite.pragma('synchronous = NORMAL');
