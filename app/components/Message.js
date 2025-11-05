@@ -1,8 +1,23 @@
+"use client";
 import CodeBlock from './CodeBlock';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { useState } from 'react';
 import Image from 'next/image';
 import { Check, Copy, StopCircle, Volume2, RefreshCw } from 'lucide-react';
+
+// Formatea hora solo en cliente para evitar hydration mismatch
+const formatTime = (ts) => {
+  try {
+    if (typeof window === 'undefined' || !ts) return '';
+    return new Intl.DateTimeFormat('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(ts);
+  } catch {
+    return '';
+  }
+};
 
 export default function Message({ message, onRetry, animate = false }) {
   const isUser = message.sender === 'user';
@@ -320,11 +335,7 @@ export default function Message({ message, onRetry, animate = false }) {
                 ? 'text-gray-300' 
                 : 'text-gray-500'
             }`}>
-              {new Intl.DateTimeFormat('es-ES', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false
-              }).format(message.timestamp)}
+              <span suppressHydrationWarning>{formatTime(message?.timestamp)}</span>
             </p>
 
             {/* Botones de acción */}
