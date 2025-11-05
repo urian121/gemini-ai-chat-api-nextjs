@@ -1,7 +1,7 @@
 "use client";
 import CodeBlock from './CodeBlock';
 import { useTypewriter } from '../hooks/useTypewriter';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { Check, Copy, StopCircle, Volume2, RefreshCw } from 'lucide-react';
 
@@ -23,6 +23,7 @@ export default function Message({ message, onRetry, animate = false }) {
   const isUser = message.sender === 'user';
   const [copied, setCopied] = useState(false);
   const [isReading, setIsReading] = useState(false);
+  const speechRef = useRef(null);
   
   // Usar efecto typewriter solo para mensajes del bot
   const { displayedText, isTyping } = useTypewriter(
@@ -42,36 +43,56 @@ export default function Message({ message, onRetry, animate = false }) {
     }
   };
 
-  // Función para leer el mensaje en voz alta
-  const handleReadAloud = () => {
-    if (isReading) {
-      // Si ya está leyendo, detener la lectura
-      window.speechSynthesis.cancel();
-      setIsReading(false);
-      return;
+  // Inicializa speak-tts de forma perezosa y segura en cliente
+  const getSpeechInstance = async () => {
+    if (speechRef.current) return speechRef.current;
+    const { default: Speech } = await import('speak-tts');
+    const speech = new Speech();
+    if (!speech.hasBrowserSupport()) {
+      throw new Error('TTS no soportado en este navegador');
     }
+    const data = await speech.init({
+      volume: 1,
+      lang: 'es-ES',
+      rate: 0.95,
+      pitch: 1,
+      splitSentences: true,
+      listeners: {
+        onvoiceschanged: (voices) => {
+          const v = voices.find(v => v.lang?.startsWith('es'))?.name;
+          if (v) speech.setVoice(v);
+        }
+      }
+    });
+    const initialVoice = data.voices?.find(v => v.lang?.startsWith('es'))?.name;
+    if (initialVoice) await speech.setVoice(initialVoice);
+    speechRef.current = speech;
+    return speech;
+  };
 
-    if ('speechSynthesis' in window) {
-      // Limpiar texto de markdown y caracteres especiales para mejor lectura
+  // Función para leer el mensaje en voz alta usando speak-tts
+  const handleReadAloud = async () => {
+    try {
+      const speech = await getSpeechInstance();
+      if (isReading) {
+        await speech.cancel();
+        setIsReading(false);
+        return;
+      }
+
       const cleanText = message.text
-        .replace(/\*\*(.*?)\*\*/g, '$1') // Remover ** de negrita
-        .replace(/`(.*?)`/g, '$1') // Remover ` de código
-        .replace(/```[\s\S]*?```/g, '[código]') // Reemplazar bloques de código
-        .replace(/#{1,6}\s/g, '') // Remover headers markdown
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1'); // Simplificar links
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/`(.*?)`/g, '$1')
+        .replace(/```[\s\S]*?```/g, '[código]')
+        .replace(/#{1,6}\s/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
 
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      
-      utterance.onstart = () => setIsReading(true);
-      utterance.onend = () => setIsReading(false);
-      utterance.onerror = () => setIsReading(false);
-      
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert('Tu navegador no soporta síntesis de voz');
+      setIsReading(true);
+      await speech.speak({ text: cleanText, queue: false });
+      setIsReading(false);
+    } catch (err) {
+      setIsReading(false);
+      alert(err?.message || 'Error al leer en voz alta');
     }
   };
   
