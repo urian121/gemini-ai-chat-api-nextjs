@@ -2,9 +2,10 @@
 
 import { useState, useRef } from 'react';
 import Image from 'next/image';
+import { compressImage } from '../services/imageService';
 import { UploadCloud, FileText, Paperclip, Loader2, Square, Mic, Send } from 'lucide-react';
 
-export default function MessageInput({ onSendMessage }) {
+export default function MessageInput({ onSendMessage, isSidebarOpen = false }) {
   const [message, setMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -14,6 +15,20 @@ export default function MessageInput({ onSendMessage }) {
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const textareaRef = useRef(null);
+
+  const autoResize = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  const handleTextChange = (e) => {
+    setMessage(e.target.value);
+    // Ajuste suave del alto tras cada cambio
+    requestAnimationFrame(autoResize);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,6 +37,7 @@ export default function MessageInput({ onSendMessage }) {
       setMessage('');
       setSelectedImage(null);
       setImagePreview(null);
+      requestAnimationFrame(autoResize);
     }
   };
 
@@ -34,48 +50,39 @@ export default function MessageInput({ onSendMessage }) {
 
   // Función para procesar cualquier tipo de archivo
   const processAnyFile = (file) => {
-    // Validar tamaño (máximo 10MB para cualquier archivo)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('El archivo es demasiado grande. Máximo 10MB.');
-      return;
-    }
-
-    // Si es imagen, usar la lógica existente
+    // Si es imagen, permitir tamaños grandes y comprimir si es necesario
     if (file.type.startsWith('image/')) {
       processImageFile(file);
       return;
     }
 
-    // Para otros tipos de archivo, solo guardar la referencia
+    // Para otros tipos de archivo, aplicar límite de 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      alert('El archivo es demasiado grande. Máximo 10MB.');
+      return;
+    }
+
+    // Guardar referencia para archivos no-imagen
     setSelectedImage(file);
     setImagePreview(null); // No hay preview para archivos no-imagen
   };
 
-  // Función para procesar archivos de imagen (mantener la existente)
-  const processImageFile = (file) => {
-    // Validar tipo de archivo
-    if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona solo archivos de imagen');
-      return;
-    }
-    
-    // Validar tamaño (máximo 5MB para imágenes)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen es demasiado grande. Máximo 5MB.');
-      return;
-    }
+  // Procesa imágenes y las comprime automáticamente si exceden 5MB
+  const processImageFile = async (file) => {
+    try {
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona solo archivos de imagen');
+        return;
+      }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target.result;
-      setSelectedImage({
-        file: file,
-        base64: base64,
-        name: file.name
-      });
+      const { file: compressedFile, base64, name } = await compressImage(file);
+
+      setSelectedImage({ file: compressedFile, base64, name });
       setImagePreview(base64);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error comprimiendo imagen:', err);
+      alert('No se pudo comprimir la imagen. Intenta con otra imagen o menor tamaño.');
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -208,7 +215,7 @@ export default function MessageInput({ onSendMessage }) {
 
   return (
   <div 
-    className="fixed bottom-0 w-full bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5"
+    className={`fixed bottom-0 right-0 ${isSidebarOpen ? 'left-64' : 'left-10'} bg-gray-50 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5`}
     onDragOver={handleDragOver}
     onDragLeave={handleDragLeave}
     onDrop={handleDrop}
@@ -253,7 +260,7 @@ export default function MessageInput({ onSendMessage }) {
             <button
               type="button"
               onClick={removeImage}
-              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 cursor-pointer"
             >
               ×
             </button>
@@ -263,12 +270,14 @@ export default function MessageInput({ onSendMessage }) {
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-end space-y-3 sm:space-y-0 sm:space-x-3">
           <div className="w-full sm:flex-1 relative">
             <textarea
+              ref={textareaRef}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={handleTextChange}
+              onInput={autoResize}
               onKeyDown={handleKeyDown}
               placeholder={selectedImage ? "Describe qué quieres saber sobre la imagen..." : "Escribe tu mensaje..."}
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 text-sm leading-tight min-h-[40px] max-h-[100px] sm:min-h-[44px] sm:max-h-[120px] md:px-4 md:py-3 md:rounded-2xl md:text-base md:min-h-[48px] md:max-h-[140px]"
-              rows="1"
+              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 text-sm leading-tight min-h-[40px] sm:min-h-[44px] md:px-4 md:py-3 md:rounded-2xl md:text-base md:min-h-[48px]"
+              rows={1}
             />
             {/* Contador de caracteres */}
             <div className="absolute bottom-2 right-2 text-xs text-gray-400 sm:right-3">

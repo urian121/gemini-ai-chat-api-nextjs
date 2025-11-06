@@ -27,11 +27,13 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async (text, imageObj = null) => {
+  const handleSendMessage = async (text, imageObj = null, historyOverride = null) => {
     if (!text.trim() && !imageObj) return;
 
-    // Extraer el base64 del objeto imagen si existe
-    const imageBase64 = imageObj ? imageObj.base64 : null;
+    // Normalizar base64: acepta objeto { base64 } o string base64 directo
+    const imageBase64 = typeof imageObj === 'string'
+      ? imageObj
+      : (imageObj?.base64 ?? null);
 
     // Agregar mensaje del usuario
     const userMessage = {
@@ -42,7 +44,9 @@ export default function Chat() {
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const baseHistory = historyOverride ?? messages;
+    const nextMessages = [...baseHistory, userMessage];
+    setMessages(nextMessages);
     setIsTyping(true);
 
     try {
@@ -71,7 +75,7 @@ export default function Chat() {
         body: JSON.stringify({
           message: text.trim(),
           image: imageBase64, // Enviar solo el base64 al API
-          history: messages, // Enviar historial para contexto
+          history: nextMessages, // Enviar historial actualizado para contexto
           conversationId: cid
         }),
       });
@@ -140,11 +144,16 @@ export default function Chat() {
     const failedMessage = messages.find(msg => msg.id === messageId);
     if (!failedMessage || !failedMessage.failed) return;
 
-    // Remover el mensaje fallido
-    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+    // Preparar historial sin el mensaje fallido y actualizar estado
+    const historyWithoutFailed = messages.filter(msg => msg.id !== messageId);
+    setMessages(historyWithoutFailed);
 
-    // Reenviar el mensaje original
-    await handleSendMessage(failedMessage.originalMessage, failedMessage.originalImage);
+    // Reenviar el mensaje original conservando imagen/base64 y contexto
+    await handleSendMessage(
+      failedMessage.originalMessage,
+      failedMessage.originalImage,
+      historyWithoutFailed
+    );
   };
 
   const loadConversation = async (cid) => {
@@ -198,7 +207,7 @@ export default function Chat() {
             onRetry={handleRetry}
           />
         </div>
-        <MessageInput onSendMessage={handleSendMessage} />
+        <MessageInput onSendMessage={handleSendMessage} isSidebarOpen={sidebarOpen} />
       </div>
       {/* sidebar derecho */}
       <Sidebar

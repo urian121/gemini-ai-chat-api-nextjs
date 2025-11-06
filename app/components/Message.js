@@ -233,11 +233,11 @@ export default function Message({ message, onRetry, animate = false }) {
   };
   
   return (
-    <div className={`flex ${isUser ? 'justify-end mr-10' : 'justify-start ml-4'}`}>
+    <div className={`flex ${isUser ? 'justify-end mr-10' : 'justify-start'}`}>
       <div className={`
         flex w-full ${isUser 
           ? 'max-w-[80%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl' 
-          : 'max-w-[85%] sm:max-w-[80%] md:max-w-[75%] lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl'} ${isUser 
+          : 'md:max-w-[75%] lg:max-w-2xl xl:max-w-3xl 2xl:max-w-4xl'} ${isUser 
           ? 'flex-row-reverse' : 'flex-row'} items-end ${isUser 
           ? 'space-x-reverse space-x-2' 
           : 'space-x-2 sm:space-x-3'}`
@@ -260,14 +260,21 @@ export default function Message({ message, onRetry, animate = false }) {
         }`}>
           {/* Imagen si existe */}
           {message.image && (
-            <div className="mb-2">
-              <Image 
-                src={message.image} 
-                alt="Imagen adjunta" 
-                className="max-w-full h-auto rounded-lg"
-                width={300}
-                height={200}
-              />
+            <div className="mb-2 group">
+              <a
+                href={message.image}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Abrir imagen en nueva pestaña"
+              >
+                <Image
+                  src={message.image}
+                  alt="Imagen adjunta"
+                  className="max-w-full h-auto rounded-lg transition-transform duration-200 group-hover:scale-[1.02] group-hover:shadow-lg cursor-zoom-in"
+                  width={300}
+                  height={200}
+                />
+              </a>
             </div>
           )}
           

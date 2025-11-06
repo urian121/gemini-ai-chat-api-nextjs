@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ensureTables, cleanupExpired, createConversation } from '@/app/db/index.js';
+import { createConversation } from '@/app/db/queries.js';
 import { randomUUID } from 'node:crypto';
 
 export const runtime = 'nodejs';
@@ -7,11 +7,8 @@ export const dynamic = 'force-dynamic';
 
 async function create() {
   try {
-    ensureTables();
-    cleanupExpired();
-
     const id = randomUUID();
-    createConversation(id);
+    await createConversation(id);
     return NextResponse.json({ conversationId: id });
   } catch (e) {
     console.error('Error creando nueva conversación:', e);
