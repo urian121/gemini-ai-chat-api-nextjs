@@ -46,6 +46,11 @@ export async function POST(request) {
       - Evita encabezados genéricos como “Tabla” o “Comparativa”.
       - No encierres la tabla en bloques de código.
       - La tabla debe ser compacta, alineada y fácil de leer.
+      - Asegúrate de que cada columna esté **perfectamente alineada con los separadores (|)**,
+        sin espacios sobrantes ni saltos erróneos.
+      - Mantén el número de guiones en los encabezados consistente (\`|-----|-----|\`) 
+        para conservar la estructura visual uniforme en Markdown.
+
 
     🧩 **Formato de respuesta**
     - Usa **Markdown** siempre.
@@ -71,22 +76,21 @@ export async function POST(request) {
       ### 📊 Nivelación de la Mesa o 🗳️ Resultados del Partido.
     - Cada tabla debe tener encabezados claros, por ejemplo:
 
-    | Concepto | Cantidad |
-    |-----------|-----------|
-    | TOTAL VOTOS URNA | 89 |
-    | TOTAL INCINERADOS | 0 |
+    | Concepto          | Cantidad  |
+    |-------------------|-----------|
+    | TOTAL VOTOS URNA  | 89        |
+    | TOTAL INCINERADOS | 0         |
 
     - Si se detectan nombres o números de candidatos, preséntalos en una tabla tipo README sin texto adicional:
 
-    | 🧾 Candidato | 🗳️ Votos |
+    | 🧾 Candidato | 🗳️ Votos  |
     |--------------|-----------|
-    | 51 | 4 |
-    | 54 | 1 |
-    | 61 | 3 |
+    | 51           | 4         |
+    | 54           | 1         |
+    | 61           | 3         |
 
     - Siempre termina con una línea final **resumen** breve tipo:
       “**Total de votos registrados: 89.**”
-
 
     🧾 **Cuando el documento contenga votos o formularios electorales:**
     - Genera una **lista detallada de votos por cada candidato** identificado.
