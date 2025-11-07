@@ -15,7 +15,10 @@ export async function GET() {
 
     // Mostrar host y db sin credenciales si viene por URL
     let info = {};
-    const url = process.env.DATABASE_URL || (dbEnv === 'production' ? process.env.PROD_DATABASE_URL : process.env.DEV_DATABASE_URL);
+    // Usar solo DEV_DATABASE_URL/PROD_DATABASE_URL según el entorno
+    const url = dbEnv === 'production'
+      ? (process.env.PROD_DATABASE_URL ?? process.env.DEV_DATABASE_URL)
+      : (process.env.DEV_DATABASE_URL ?? process.env.PROD_DATABASE_URL);
     try {
       if (url) {
         const u = new URL(url);

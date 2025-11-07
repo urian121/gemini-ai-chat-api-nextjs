@@ -5,8 +5,9 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 // Entorno de BD (usar solo DB_ENV; si falta, asumir 'development')
 const dbEnv = (process.env.DB_ENV || 'development').toLowerCase();
 const isProd = dbEnv === "production";
-// Soporta DATABASE_URL genérico y los específicos por entorno (sin fallback a variables sueltas)
-const DATABASE_URL = process.env.DATABASE_URL || (isProd ? process.env.PROD_DATABASE_URL : process.env.DEV_DATABASE_URL);
+// Usar solo DEV_DATABASE_URL/PROD_DATABASE_URL presentes en .env.local
+const DEV_URL = process.env.DEV_DATABASE_URL;
+const PROD_URL = process.env.PROD_DATABASE_URL;
 // Log seguro del entorno de BD seleccionado
 console.log(`[DB] Entorno de BD: ${isProd ? 'producción' : 'desarrollo'} (DB_ENV=${dbEnv})`);
 
@@ -14,9 +15,12 @@ let pool;
 let _db;
 
 function resolveUrl() {
-  const selectedUrl = DATABASE_URL;
+  const selectedUrl = isProd ? (PROD_URL || DEV_URL) : (DEV_URL || PROD_URL);
   if (!selectedUrl) {
-    throw new Error("No se encontró DATABASE_URL ni DEV/PROD_DATABASE_URL. Define una URL de conexión en el entorno (Vercel/variables de entorno).");
+    throw new Error("No se encontró DEV_DATABASE_URL ni PROD_DATABASE_URL. Define una URL de conexión en .env.local o variables de entorno.");
+  }
+  if (isProd && !PROD_URL && DEV_URL) {
+    console.warn('[DB] PROD_DATABASE_URL no está definido; usando DEV_DATABASE_URL como fallback.');
   }
   return selectedUrl;
 }

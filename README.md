@@ -20,6 +20,9 @@ Chatbot moderno desarrollado con **Next.js 16** y **React 19** que integra la AP
     visit http://localhost:3000
     Configura tu GEMINI_API_KEY en .env.local
 
+    🔍 Inspecciona la base de datos:
+    http://localhost:3000/api/db/inspect
+
 ### Expresiones de Gratitud 🎁
 
     Comenta a otros sobre este proyecto 📢
