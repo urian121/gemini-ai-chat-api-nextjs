@@ -1,14 +1,16 @@
-import { db } from '@/app/db/db.js';
+import { getDb } from '@/app/db/db.js';
 import { conversations, messages } from '@/drizzle/schema.js';
 import { sql, eq } from 'drizzle-orm';
 
 export async function createConversation(id) {
+  const db = getDb();
   await db.insert(conversations)
     .values({ id })
     .onConflictDoNothing({ target: conversations.id });
 }
 
 export async function saveMessage({ conversationId, content, sender, image }) {
+  const db = getDb();
   await db.insert(messages).values({
     conversationId,
     content,
@@ -18,6 +20,7 @@ export async function saveMessage({ conversationId, content, sender, image }) {
 }
 
 export async function getMessages(conversationId) {
+  const db = getDb();
   return db.select()
     .from(messages)
     .where(eq(messages.conversationId, conversationId))
@@ -25,6 +28,7 @@ export async function getMessages(conversationId) {
 }
 
 export async function listConversations() {
+  const db = getDb();
   const result = await db.execute(sql`
     SELECT c.id, c.created_at,
       (

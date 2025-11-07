@@ -10,30 +10,37 @@ const DATABASE_URL = process.env.DATABASE_URL || (isProd ? process.env.PROD_DATA
 // Log seguro del entorno de BD seleccionado
 console.log(`[DB] Entorno de BD: ${isProd ? 'producción' : 'desarrollo'} (DB_ENV=${dbEnv})`);
 
-const selectedUrl = DATABASE_URL;
+let pool;
+let _db;
 
-if (!selectedUrl) {
-  throw new Error("No se encontró DATABASE_URL ni DEV/PROD_DATABASE_URL. Define una URL de conexión en .env.local");
+function resolveUrl() {
+  const selectedUrl = DATABASE_URL;
+  if (!selectedUrl) {
+    throw new Error("No se encontró DATABASE_URL ni DEV/PROD_DATABASE_URL. Define una URL de conexión en el entorno (Vercel/variables de entorno).");
+  }
+  return selectedUrl;
 }
 
-const sslOption = (() => {
+function computeSsl(url) {
   if (!isProd) return false;
-  // Si la URL indica 'sslmode=disable', desactiva SSL. En otros casos, usa SSL tolerante.
-  return /sslmode=disable/.test(selectedUrl) ? false : { rejectUnauthorized: false };
-})();
+  return /sslmode=disable/.test(url) ? false : { rejectUnauthorized: false };
+}
 
-const pool = new Pool({
-  connectionString: selectedUrl,
-  ssl: sslOption,
-});
+export function getDb() {
+  if (_db) return _db;
+  const url = resolveUrl();
+  const ssl = computeSsl(url);
+  pool = new Pool({ connectionString: url, ssl });
+  _db = drizzle(pool);
+  return _db;
+}
 
-export default pool;
-export const db = drizzle(pool);
-
-// Ejecutar verificación de conexión y migraciones al arrancar, una sola vez
-const MIGRATE_ON_START = ((process.env.MIGRATE_ON_START ?? (isProd ? 'true' : 'false')) === 'true');
+// Ejecutar verificación de conexión y migraciones de forma perezosa, solo cuando se requiera
+// Por defecto NO migrar automáticamente (evita anti-patrones en serverless). Actívalo solo explícitamente.
+const MIGRATE_ON_START = ((process.env.MIGRATE_ON_START ?? 'false') === 'true');
 export const dbInit = (globalThis.__dbInitPromise ??= (async () => {
   try {
+    const db = getDb();
     console.log('[DB] Inicializando conexión y migraciones...');
     await pool.query('SELECT 1');
     console.log('[DB] Conexión OK');

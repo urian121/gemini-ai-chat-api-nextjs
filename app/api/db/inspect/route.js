@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/app/db/db.js';
+import { getDb } from '@/app/db/db.js';
 import { sql } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -9,6 +9,7 @@ export async function GET() {
   try {
     const dbEnv = (process.env.DB_ENV || 'development').toLowerCase();
     // Contar filas en tablas clave
+    const db = getDb();
     const conv = await db.execute(sql`SELECT COUNT(*)::INT AS count FROM conversations;`);
     const msgs = await db.execute(sql`SELECT COUNT(*)::INT AS count FROM messages;`);
 
