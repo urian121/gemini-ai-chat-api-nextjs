@@ -17,7 +17,8 @@ export default function Chat() {
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // El sidebar debe estar siempre visible; en escritorio abierto, en móvil minimizado
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -26,6 +27,16 @@ export default function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Estado inicial del sidebar según viewport y mantener sincronizado en cambios de tamaño
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const setByViewport = () => setSidebarOpen(!mq.matches);
+    setByViewport();
+    mq.addEventListener('change', setByViewport);
+    return () => mq.removeEventListener('change', setByViewport);
+  }, []);
 
   const handleSendMessage = async (text, imageObj = null, historyOverride = null) => {
     if (!text.trim() && !imageObj) return;
@@ -196,20 +207,20 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-screen">
-      {/* contenido principal */}
-      <div className="flex-1 flex flex-col w-full">
-        <div className="flex-1 flex flex-col w-full max-w-full">
+    <div className="min-h-screen bg-gray-100">
+      {/* contenido principal, empujado al centro con margen izquierdo según ancho del sidebar */}
+      <div className={`${sidebarOpen ? 'ml-64' : 'ml-10'} transition-all duration-200`}> 
+        <div className="flex flex-col min-h-screen w-full">
           <MessageList 
             messages={messages} 
             isTyping={isTyping}
             messagesEndRef={messagesEndRef}
             onRetry={handleRetry}
           />
+          <MessageInput onSendMessage={handleSendMessage} isSidebarOpen={sidebarOpen} />
         </div>
-        <MessageInput onSendMessage={handleSendMessage} isSidebarOpen={sidebarOpen} />
       </div>
-      {/* sidebar derecho */}
+      {/* sidebar fijo a la izquierda */}
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(o => !o)}
