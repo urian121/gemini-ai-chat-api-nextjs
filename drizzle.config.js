@@ -1,16 +1,14 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-const {
-  POSTGRES_HOST,
-  POSTGRES_USER,
-  POSTGRES_PASSWORD,
-  POSTGRES_DB,
-  POSTGRES_PORT = 5432
-} = process.env;
+const dbEnv = (process.env.DB_ENV || 'development').toLowerCase();
+const isProd = dbEnv === 'production';
+const { DEV_DATABASE_URL, PROD_DATABASE_URL, DATABASE_URL } = process.env;
+const url = DATABASE_URL || (isProd ? PROD_DATABASE_URL : DEV_DATABASE_URL);
+console.log(`[Drizzle] Entorno de BD: ${isProd ? 'producción' : 'desarrollo'} (DB_ENV=${dbEnv})`);
 
-if (!POSTGRES_USER || !POSTGRES_PASSWORD || !POSTGRES_HOST || !POSTGRES_DB) {
-  console.warn('⚠️ Variables de entorno PostgreSQL incompletas en .env.local');
+if (!url) {
+  throw new Error('No se encontró DATABASE_URL ni DEV/PROD_DATABASE_URL. Define una URL de conexión en .env.local');
 }
 
 const config = {
@@ -18,14 +16,7 @@ const config = {
   out: './drizzle',
   dialect: 'postgresql',
   strict: true,
-  dbCredentials: {
-    host: POSTGRES_HOST,
-    user: POSTGRES_USER,
-    password: POSTGRES_PASSWORD,
-    database: POSTGRES_DB,
-    port: Number(POSTGRES_PORT) || 5432,
-    ssl: false
-  }
+  dbCredentials: { url }
 };
 
 export default config;
