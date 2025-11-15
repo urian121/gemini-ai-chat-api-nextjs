@@ -226,6 +226,7 @@ export default function Chat() {
         onToggle={() => setSidebarOpen(o => !o)}
         onSelectConversation={loadConversation}
         onNewChat={handleNewChat}
+        selectedId={conversationId}
       />
     </div>
   );

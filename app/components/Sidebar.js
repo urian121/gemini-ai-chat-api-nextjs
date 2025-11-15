@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, MessagesSquare } from 'lucide-react';
 
-export default function Sidebar({ isOpen, onToggle, onSelectConversation, onNewChat }) {
+export default function Sidebar({ isOpen, onToggle, onSelectConversation, onNewChat, selectedId }) {
   // items === null indica "cargando" sin setState síncrono en efectos
   const [items, setItems] = useState(null);
 
@@ -21,6 +21,25 @@ export default function Sidebar({ isOpen, onToggle, onSelectConversation, onNewC
   }, [isOpen]);
 
   const isLoading = isOpen && items === null;
+
+  const formatDate = (value) => {
+    try {
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      let hours = d.getHours();
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'pm' : 'am';
+      hours = hours % 12;
+      if (hours === 0) hours = 12;
+      const hh = String(hours).padStart(2, '0');
+      return `${day}/${month}/${year} ${hh}:${minutes} ${ampm}`;
+    } catch {
+      return String(value);
+    }
+  };
 
   return (
     <aside className={`fixed left-0 top-0 h-screen z-40 ${isOpen ? 'w-64' : 'w-10'} transition-all duration-200 bg-[#e4e4e4] flex flex-col`}>
@@ -58,25 +77,17 @@ export default function Sidebar({ isOpen, onToggle, onSelectConversation, onNewC
               {items.map(item => (
                 <li key={item.id}>
                   <button
-                    className="w-full text-left text-sm px-2 py-2 rounded hover:bg-gray-200 hover:cursor-pointer"
+                    className={`${selectedId === item.id ? 'bg-gray-300 ring-2 ring-gray-400' : ''} w-full text-left text-sm px-2 py-2 rounded hover:bg-gray-200 hover:cursor-pointer`}
+                    aria-current={selectedId === item.id ? 'true' : undefined}
                     onClick={() => onSelectConversation(item.id)}
                   >
                     <div className="flex items-center justify-between">
                       <span className="truncate max-w-10">
                         {item.title ? item.title : item.id}
                       </span>
-                      <span className="text-[11px] text-gray-500">{item.message_count} msgs</span>
+                      <span className="text-[11px] text-gray-600">{formatDate(item.created_at)}</span>
                     </div>
-                    <div className="text-[11px] text-gray-500 mt-1">
-                      {(() => {
-                        try {
-                          const d = new Date(item.created_at);
-                          return d.toLocaleString('es-ES', { hour12: false });
-                        } catch {
-                          return String(item.created_at);
-                        }
-                      })()}
-                    </div>
+                    <div className="text-[11px] text-gray-500 mt-1">{item.message_count} mensajes</div>
                   </button>
                 </li>
               ))}
